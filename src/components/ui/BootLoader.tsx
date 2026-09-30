@@ -8,33 +8,53 @@ const INK_PATH =
 const WORD = 'SmartSchedule';
 const DASH = 700;
 
+/** Shown once per browser session; a plain reload should not replay 5s of theatre. */
+const SEEN_KEY = 'ss-boot-seen';
+const FIRST_VISIT = 5000;
+const REVISIT = 500;
+/** Hard cap: the overlay must never outlive this, whatever else goes wrong. */
+const MAX_DURATION = 6000;
+
 interface Props {
   minDuration?: number;
   children: ReactNode;
 }
 
-export function BootLoader({ minDuration = 5000, children }: Props) {
+export function BootLoader({ minDuration, children }: Props) {
   const reduced =
     (typeof window !== 'undefined' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches) ||
     useSettingsStore.getState().settings.reducedMotion;
 
-  const duration = reduced ? 700 : minDuration;
+  // Read once, before the first render, so the duration never changes mid-flight.
+  const [isFirstVisit] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    try {
+      const seen = window.sessionStorage.getItem(SEEN_KEY) === '1';
+      window.sessionStorage.setItem(SEEN_KEY, '1');
+      return !seen;
+    } catch {
+      return true;
+    }
+  });
+
+  const floor = minDuration ?? (isFirstVisit ? FIRST_VISIT : REVISIT);
+  const duration = reduced ? Math.min(floor, 700) : Math.min(floor, MAX_DURATION);
   const [progress, setProgress] = useState(0);
   const [done, setDone] = useState(false);
   const [hidden, setHidden] = useState(false);
 
+  // Timers, not requestAnimationFrame: rAF is throttled to a standstill in
+  // background tabs, which used to freeze the bar at 0% forever.
   useEffect(() => {
-    const start = performance.now();
-    let raf: number;
+    const start = Date.now();
     const tick = () => {
-      const t = Math.min(1, (performance.now() - start) / duration);
+      const t = Math.min(1, (Date.now() - start) / duration);
       setProgress(Math.round(t * 100));
-      if (t < 1) raf = requestAnimationFrame(tick);
+      if (t < 1) setTimeout(tick, 80);
       else setDone(true);
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    tick();
   }, [duration]);
 
   useEffect(() => {
@@ -42,6 +62,17 @@ export function BootLoader({ minDuration = 5000, children }: Props) {
     const t = setTimeout(() => setHidden(true), reduced ? 60 : 420);
     return () => clearTimeout(t);
   }, [done, reduced]);
+
+  // Failsafe, independent of the progress loop: if anything above stalls,
+  // drop the overlay anyway so the app underneath is never trapped.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setProgress(100);
+      setDone(true);
+      setHidden(true);
+    }, MAX_DURATION + 1200);
+    return () => clearTimeout(t);
+  }, []);
 
   const caption =
     progress < 30
@@ -61,7 +92,9 @@ export function BootLoader({ minDuration = 5000, children }: Props) {
       <AnimatePresence>
         {!hidden && (
           <motion.div
-            className="fixed inset-0 z-[9999] overflow-y-auto bg-ink-50 dark:bg-[#0e0f15] transition-opacity"
+            className={`fixed inset-0 z-[9999] overflow-y-auto bg-ink-50 transition-opacity dark:bg-[#0e0f15] ${
+              done ? 'pointer-events-none' : ''
+            }`}
             initial={{ opacity: 1 }}
             animate={{ opacity: done ? 0 : 1 }}
             exit={{ opacity: 0 }}
@@ -136,7 +169,7 @@ export function BootLoader({ minDuration = 5000, children }: Props) {
                           strokeDashoffset: DASH,
                           animation: reduced
                             ? undefined
-                            : `ink-draw 4.1s cubic-bezier(0.3, 0.7, 0.2, 1) forwards`,
+                            : `ink-draw ${duration}ms cubic-bezier(0.3, 0.7, 0.2, 1) forwards`,
                           ...inkMotion,
                         }}
                       />
@@ -147,7 +180,9 @@ export function BootLoader({ minDuration = 5000, children }: Props) {
                         fill="var(--accent)"
                         opacity="0"
                         style={{
-                          animation: reduced ? undefined : 'loader-dot 0.3s ease 2.6s forwards',
+                          animation: reduced
+                            ? undefined
+                            : `loader-dot 0.3s ease ${Math.round(duration * 0.63)}s forwards`,
                         }}
                       />
                       <g
@@ -156,7 +191,9 @@ export function BootLoader({ minDuration = 5000, children }: Props) {
                           offsetPath: `path('${INK_PATH}')`,
                           offsetRotate: 'auto',
                           offsetDistance: '0%',
-                          animation: reduced ? undefined : 'pen-trace 4.1s ease-in-out forwards',
+                          animation: reduced
+                            ? undefined
+                            : `pen-trace ${duration}ms ease-in-out forwards`,
                           ...penMotion,
                         }}
                       >

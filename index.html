@@ -34,6 +34,44 @@
         </div>
       </div>
     </div>
+    <script>
+      // Runs even if the app bundle itself fails to load (e.g. a cached HTML
+      // shell pointing at deleted bundles after a deploy), so the visitor
+      // always has a way out instead of a blank page.
+      (function () {
+        var shown = false;
+        function bail(reason) {
+          if (shown) return;
+          shown = true;
+          var root = document.getElementById('root');
+          if (!root) return;
+          root.innerHTML =
+            '<div style="min-height:100vh;display:grid;place-items:center;padding:24px;text-align:center;font:16px/1.6 system-ui,sans-serif;background:#f7f7f8;color:#1b2033">' +
+            '<div style="max-width:32rem"><h1 style="font-size:1.15rem;font-weight:700;margin:0 0 8px">SmartSchedule needs a refresh</h1>' +
+            '<p style="margin:0 0 16px;color:#5b6070;font-size:.9rem">A cached copy of the app is out of date. Reloading fetches the current version and clears the offline cache.</p>' +
+            '<button id="ss-reload" style="font:inherit;font-weight:600;padding:10px 20px;border-radius:10px;border:0;background:#1b2033;color:#fff;cursor:pointer">Reload</button>' +
+            '<p style="margin:14px 0 0;color:#8b93a3;font-size:.75rem">' + reason + '</p></div></div>';
+          document.getElementById('ss-reload').onclick = function () {
+            if (navigator.serviceWorker) {
+              navigator.serviceWorker.getRegistrations().then(function (rs) {
+                return Promise.all(rs.map(function (r) { return r.unregister(); }));
+              }).finally(function () {
+                if (window.caches) return caches.keys().then(function (k) { return Promise.all(k.map(function (n) { return caches.delete(n); })); });
+              }).finally(function () { location.reload(); });
+            } else {
+              location.reload();
+            }
+          };
+        }
+        // Only react to a genuine module-load failure. There is deliberately
+        // no timeout here: the app's own loader has a failsafe, and a timer
+        // that misfires would cover a perfectly working page.
+        var s = document.querySelector('script[type="module"]');
+        if (s) {
+          s.addEventListener('error', function () { bail('The app files could not be loaded.'); });
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
