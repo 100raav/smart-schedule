@@ -8,10 +8,8 @@ const INK_PATH =
 const WORD = 'SmartSchedule';
 const DASH = 700;
 
-/** Shown once per browser session; a plain reload should not replay 5s of theatre. */
-const SEEN_KEY = 'ss-boot-seen';
+/** Kept deliberately: the 5s writing animation is the intended experience. */
 const FIRST_VISIT = 5000;
-const REVISIT = 500;
 /** Hard cap: the overlay must never outlive this, whatever else goes wrong. */
 const MAX_DURATION = 6000;
 
@@ -20,26 +18,13 @@ interface Props {
   children: ReactNode;
 }
 
-export function BootLoader({ minDuration, children }: Props) {
+export function BootLoader({ minDuration = FIRST_VISIT, children }: Props) {
   const reduced =
     (typeof window !== 'undefined' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches) ||
     useSettingsStore.getState().settings.reducedMotion;
 
-  // Read once, before the first render, so the duration never changes mid-flight.
-  const [isFirstVisit] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    try {
-      const seen = window.sessionStorage.getItem(SEEN_KEY) === '1';
-      window.sessionStorage.setItem(SEEN_KEY, '1');
-      return !seen;
-    } catch {
-      return true;
-    }
-  });
-
-  const floor = minDuration ?? (isFirstVisit ? FIRST_VISIT : REVISIT);
-  const duration = reduced ? Math.min(floor, 700) : Math.min(floor, MAX_DURATION);
+  const duration = reduced ? Math.min(minDuration, 700) : Math.min(minDuration, MAX_DURATION);
   const [progress, setProgress] = useState(0);
   const [done, setDone] = useState(false);
   const [hidden, setHidden] = useState(false);

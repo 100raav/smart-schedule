@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartSchedule — reset</title>
+    <style>
+      html { font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+      body { min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 24px;
+             background: #f7f7f8; color: #1b2033; }
+      .box { max-width: 30rem; text-align: center; }
+      h1 { font-size: 1.2rem; font-weight: 700; margin: 0 0 8px; }
+      p { color: #5b6070; font-size: .92rem; line-height: 1.6; margin: 0 0 8px; }
+      button { font: inherit; font-weight: 600; padding: 12px 24px; border-radius: 10px;
+               border: 0; background: #1b2033; color: #fff; cursor: pointer; margin-top: 12px; }
+      button[disabled] { opacity: .6; cursor: default; }
+      code { background: #eceef4; padding: 1px 5px; border-radius: 4px; font-size: .85em; }
+      #log { margin-top: 16px; font-size: .8rem; color: #6e7686; text-align: left;
+             white-space: pre-wrap; font-family: ui-monospace, monospace; }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <h1>Reset SmartSchedule</h1>
+      <p>
+        This removes the offline copy of the app that is serving deleted files, then
+        opens the current version. Your schedules are stored in this browser and are
+        not touched.
+      </p>
+      <button id="go">Reset and reload</button>
+      <div id="log"></div>
+    </div>
+    <script>
+      var log = document.getElementById('log');
+      function say(s) { log.textContent += s + '\n'; }
+
+      document.getElementById('go').onclick = function () {
+        var btn = this;
+        btn.disabled = true;
+        log.textContent = '';
+        say('1/3  unregistering service workers…');
+
+        var unregister = navigator.serviceWorker
+          ? navigator.serviceWorker.getRegistrations().then(function (rs) {
+              return Promise.all(
+                rs.map(function (r) {
+                  say('    ' + r.scope);
+                  return r.unregister();
+                })
+              );
+            })
+          : Promise.resolve();
+
+        unregister
+          .then(function () {
+            say('2/3  clearing caches…');
+            if (!window.caches) return [];
+            return caches.keys().then(function (keys) {
+              return Promise.all(
+                keys.map(function (k) {
+                  say('    ' + k);
+                  return caches.delete(k);
+                })
+              );
+            });
+          })
+          .then(function () {
+            say('3/3  done — reloading…');
+            // cache: no-store on the navigation is not enough on its own, but the
+            // worker is gone now, so the real file is guaranteed to be fetched.
+            location.replace('./index.html?reset=' + Date.now());
+          })
+          .catch(function (e) {
+            say('something went wrong: ' + e);
+            btn.disabled = false;
+          });
+      };
+    </script>
+  </body>
+</html>
