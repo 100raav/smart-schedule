@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 420" width="760" height="420" role="img" aria-label="SmartSchedule on mobile and tablet">
+  <title>Responsive — phone and tablet</title>
+  <defs>
+    <linearGradient id="mbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f7f8ff"/>
+      <stop offset="100%" stop-color="#eef1fb"/>
+    </linearGradient>
+    <linearGradient id="mbrand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5873f8"/>
+      <stop offset="100%" stop-color="#303ccb"/>
+    </linearGradient>
+    <filter id="mshadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#1c1d24" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <rect width="760" height="420" rx="22" fill="url(#mbg)"/>
+
+  <!-- phone -->
+  <g filter="url(#mshadow)">
+    <rect x="66" y="40" width="196" height="344" rx="26" fill="#ffffff" stroke="#e4e7ee"/>
+  </g>
+  <rect x="66" y="40" width="196" height="34" rx="26" fill="#f2f3f7"/>
+  <rect x="146" y="50" width="36" height="6" rx="3" fill="#d8dce2"/>
+
+  <rect x="82" y="88" width="14" height="14" rx="4" fill="url(#mbrand)"/>
+  <text x="102" y="99" font-family="Inter, Segoe UI, sans-serif" font-size="9" font-weight="700" fill="#1c1d24">SmartSchedule</text>
+  <rect x="82" y="112" width="60" height="18" rx="9" fill="url(#mbrand)"/>
+  <text x="112" y="124" font-family="Inter, Segoe UI, sans-serif" font-size="7" font-weight="600" fill="#fff" text-anchor="middle">+ New</text>
+
+  <text x="82" y="156" font-family="Inter, Segoe UI, sans-serif" font-size="10" font-weight="700" fill="#20232d">My Schedules</text>
+  <g font-family="Inter, Segoe UI, sans-serif" font-size="7" fill="#6e7686">
+    <rect x="82" y="166" width="164" height="34" rx="8" fill="#ffffff" stroke="#eceef3"/>
+    <rect x="90" y="176" width="3" height="14" rx="1.5" fill="#5873f8"/>
+    <text x="100" y="182" font-weight="600" fill="#373a41">Weekly Plan</text>
+    <text x="100" y="192">7 days · 18 activities</text>
+    <rect x="90" y="190" width="52" height="4" rx="2" fill="#eceef3"/>
+
+    <rect x="82" y="206" width="164" height="34" rx="8" fill="#ffffff" stroke="#eceef3"/>
+    <rect x="90" y="216" width="3" height="14" rx="1.5" fill="#0ea5e9"/>
+    <text x="100" y="222" font-weight="600" fill="#373a41">Exam Revision</text>
+    <text x="100" y="232">3 days · 9 activities</text>
+    <rect x="90" y="230" width="38" height="4" rx="2" fill="#eceef3"/>
+
+    <rect x="82" y="246" width="164" height="34" rx="8" fill="#ffffff" stroke="#eceef3"/>
+    <rect x="90" y="256" width="3" height="14" rx="1.5" fill="#10b981"/>
+    <text x="100" y="262" font-weight="600" fill="#373a41">Fitness Week</text>
+    <text x="100" y="272">7 days · 12 activities</text>
+    <rect x="90" y="270" width="46" height="4" rx="2" fill="#eceef3"/>
+  </g>
+
+  <rect x="82" y="292" width="164" height="1" fill="#eceef3"/>
+  <g font-family="Inter, Segoe UI, sans-serif" font-size="7" fill="#8b93a3">
+    <text x="82" y="312">Offline-ready · stored locally</text>
+  </g>
+
+  <!-- bottom nav -->
+  <rect x="66" y="336" width="196" height="48" fill="#fcfcfd"/>
+  <line x1="66" y1="336" x2="262" y2="336" stroke="#eceef3"/>
+  <g font-family="Inter, Segoe UI, sans-serif" font-size="6" text-anchor="middle">
+    <rect x="80" y="344" width="20" height="16" rx="4" fill="#eef1ff"/>
+    <text x="90" y="376" fill="#303ccb" font-weight="600">Home</text>
+    <text x="132" y="356" fill="#b6bcc7">▤</text>
+    <text x="132" y="376" fill="#8b93a3">Plans</text>
+    <text x="174" y="356" fill="#b6bcc7">▧</text>
+    <text x="174" y="376" fill="#8b93a3">Templ</text>
+    <text x="216" y="356" fill="#b6bcc7">◔</text>
+    <text x="216" y="376" fill="#8b93a3">Stats</text>
+    <text x="246" y="356" fill="#b6bcc7">⚙</text>
+    <text x="246" y="376" fill="#8b93a3">Set</text>
+  </g>
+
+  <!-- tablet -->
+  <g filter="url(#mshadow)">
+    <rect x="316" y="70" width="380" height="284" rx="18" fill="#ffffff" stroke="#e4e7ee"/>
+  </g>
+  <rect x="316" y="70" width="380" height="30" rx="18" fill="#f2f3f7"/>
+  <circle cx="336" cy="85" r="4" fill="#ff5f57"/>
+  <circle cx="350" cy="85" r="4" fill="#febc2e"/>
+  <circle cx="364" cy="85" r="4" fill="#28c840"/>
+  <rect x="392" y="78" width="180" height="14" rx="7" fill="#e6e8ef"/>
+
+  <!-- tablet sidebar -->
+  <rect x="316" y="100" width="112" height="254" fill="#ffffff"/>
+  <line x1="428" y1="100" x2="428" y2="354" stroke="#eceef3"/>
+  <rect x="330" y="114" width="16" height="16" rx="5" fill="url(#mbrand)"/>
+  <text x="352" y="126" font-family="Inter, Segoe UI, sans-serif" font-size="8" font-weight="700" fill="#1c1d24">Smart</text>
+  <rect x="326" y="140" width="92" height="18" rx="7" fill="url(#mbrand)"/>
+  <text x="372" y="152" font-family="Inter, Segoe UI, sans-serif" font-size="6.5" font-weight="600" fill="#fff" text-anchor="middle">+ Create</text>
+  <g font-family="Inter, Segoe UI, sans-serif" font-size="6.5" fill="#585e6c">
+    <rect x="326" y="166" width="92" height="16" rx="6" fill="#eef1ff"/>
+    <text x="336" y="177" fill="#303ccb" font-weight="600">▦ Dashboard</text>
+    <text x="336" y="195">▤ Schedules</text>
+    <text x="336" y="213">▧ Templates</text>
+    <text x="336" y="231">◔ Analytics</text>
+    <text x="336" y="249">⚙ Settings</text>
+  </g>
+
+  <!-- tablet grid -->
+  <rect x="446" y="118" width="4" height="4" rx="2" fill="#303ccb"/>
+  <text x="456" y="124" font-family="Inter, Segoe UI, sans-serif" font-size="9" font-weight="700" fill="#20232d">Weekly Plan</text>
+  <rect x="612" y="114" width="72" height="16" rx="6" fill="url(#mbrand)"/>
+  <text x="648" y="125" font-family="Inter, Segoe UI, sans-serif" font-size="6" font-weight="600" fill="#fff" text-anchor="middle">Export PDF</text>
+  <line x1="446" y1="136" x2="684" y2="136" stroke="#e4e7ee"/>
+
+  <rect x="446" y="142" width="238" height="16" fill="#f7f8fd"/>
+  <text x="450" y="153" font-family="Inter, Segoe UI, sans-serif" font-size="6" font-weight="600" fill="#8b93a3">Time</text>
+  <g font-family="Inter, Segoe UI, sans-serif" font-size="6" font-weight="700" fill="#494e59" text-anchor="middle">
+    <text x="516" y="152">MON</text><text x="574" y="152">TUE</text><text x="632" y="152">WED</text><text x="676" y="152">THU</text>
+  </g>
+  <rect x="446" y="158" width="238" height="180" fill="#ffffff"/>
+  <g stroke="#f0f2f6">
+    <line x1="446" y1="182" x2="684" y2="182"/><line x1="446" y1="206" x2="684" y2="206"/>
+    <line x1="446" y1="230" x2="684" y2="230"/><line x1="446" y1="254" x2="684" y2="254"/>
+    <line x1="446" y1="278" x2="684" y2="278"/><line x1="446" y1="302" x2="684" y2="302"/>
+    <line x1="446" y1="326" x2="684" y2="326"/>
+  </g>
+  <g stroke="#eceef3">
+    <line x1="488" y1="158" x2="488" y2="338"/><line x1="546" y1="158" x2="546" y2="338"/>
+    <line x1="604" y1="158" x2="604" y2="338"/><line x1="662" y1="158" x2="662" y2="338"/>
+  </g>
+  <g font-family="Inter, Segoe UI, sans-serif" font-size="5.5" fill="#b6bcc7" text-anchor="end">
+    <text x="484" y="166">08</text><text x="484" y="190">09</text><text x="484" y="214">10</text>
+    <text x="484" y="238">11</text><text x="484" y="262">12</text><text x="484" y="286">13</text>
+  </g>
+  <rect x="492" y="162" width="50" height="16" rx="4" fill="#e0ebff" stroke="#5873f8"/>
+  <rect x="492" y="162" width="2" height="16" fill="#5873f8"/>
+  <text x="498" y="172" font-family="Inter, Segoe UI, sans-serif" font-size="5" font-weight="600" fill="#2b3383">Deep Work</text>
+  <rect x="550" y="186" width="50" height="16" rx="4" fill="#fef3c7" stroke="#f59e0b"/>
+  <rect x="550" y="186" width="2" height="16" fill="#f59e0b"/>
+  <text x="556" y="196" font-family="Inter, Segoe UI, sans-serif" font-size="5" font-weight="600" fill="#92400e">Gym</text>
+  <rect x="608" y="210" width="50" height="16" rx="4" fill="#ede9fe" stroke="#8b5cf6"/>
+  <rect x="608" y="210" width="2" height="16" fill="#8b5cf6"/>
+  <text x="614" y="220" font-family="Inter, Segoe UI, sans-serif" font-size="5" font-weight="600" fill="#5b21b6">Sync</text>
+  <rect x="666" y="234" width="16" height="16" rx="4" fill="#d1fae5" stroke="#10b981"/>
+  <rect x="492" y="282" width="50" height="16" rx="4" fill="#fee2e2" stroke="#ef4444"/>
+  <rect x="492" y="282" width="2" height="16" fill="#ef4444"/>
+  <text x="498" y="292" font-family="Inter, Segoe UI, sans-serif" font-size="5" font-weight="600" fill="#991b1b">Seminar</text>
+  <rect x="550" y="306" width="50" height="16" rx="4" fill="#ccfbf1" stroke="#14b8a6"/>
+  <rect x="550" y="306" width="2" height="16" fill="#14b8a6"/>
+  <text x="556" y="316" font-family="Inter, Segoe UI, sans-serif" font-size="5" font-weight="600" fill="#115e59">Commute</text>
+</svg>
