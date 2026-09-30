@@ -1,4 +1,4 @@
-import { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes, useEffect, useId } from 'react';
+import { ButtonHTMLAttributes, InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes, useEffect, useId } from 'react';
 import { X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -69,12 +69,13 @@ export function Toggle({
   onChange,
   label,
   disabled,
+  ...rest
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
   label?: string;
   disabled?: boolean;
-}) {
+} & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onChange' | 'type' | 'children'>) {
   return (
     <button
       type="button"
@@ -82,6 +83,7 @@ export function Toggle({
       aria-checked={checked}
       disabled={disabled}
       onClick={() => onChange(!checked)}
+      {...rest}
       className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 after:absolute after:-inset-2.5 after:content-[''] ${
         checked ? 'bg-[var(--accent)]' : 'bg-ink-200 dark:bg-white/15'
       }`}

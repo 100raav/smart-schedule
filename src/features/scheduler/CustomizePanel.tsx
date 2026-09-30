@@ -1,3 +1,4 @@
+import { cloneElement, isValidElement, type ReactElement, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Palette, Layout, Type, Grid3x3, NotebookPen, X, Accessibility } from 'lucide-react';
 import type { ScheduleSettings, BorderStyle, LayoutDensity, ScheduleStyle } from '../../types';
@@ -231,11 +232,17 @@ function Section({ icon, title, children }: { icon: React.ReactNode; title: stri
   );
 }
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function Row({ label, children }: { label: string; children: ReactNode }) {
+  // Give the control an accessible name when the caller did not set one,
+  // otherwise these switches are announced as unnamed "switch" elements.
+  const control =
+    isValidElement(children) && !(children.props as { 'aria-label'?: string })['aria-label']
+      ? cloneElement(children as ReactElement<{ 'aria-label'?: string }>, { 'aria-label': label })
+      : children;
   return (
     <div className="flex items-center justify-between gap-3 py-0.5">
       <span className="text-sm text-ink-700 dark:text-ink-300">{label}</span>
-      {children}
+      {control}
     </div>
   );
 }

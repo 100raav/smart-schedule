@@ -146,6 +146,10 @@ html.dark .pen-cursor * {
 
 /* Print: only schedule sheet */
 @media print {
+  @page {
+    margin: 0;
+  }
+  html,
   body {
     background: #fff !important;
   }
@@ -154,16 +158,20 @@ html.dark .pen-cursor * {
     display: none !important;
   }
   .print-root {
-    position: fixed;
-    inset: 0;
+    position: static;
+    inset: auto;
     overflow: visible;
+    padding: 0 !important;
     background: #fff !important;
     background-image: none !important;
   }
   .print-sheet {
     box-shadow: none !important;
     border: none !important;
+    border-radius: 0 !important;
     margin: 0 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 }
 

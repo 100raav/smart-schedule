@@ -98,6 +98,11 @@ export interface ScheduleGridProps {
   onEditActivity?: (id: string) => void;
   onAddActivity?: (day: string, start: number) => void;
   compact?: boolean;
+  /**
+   * Renders the grid edge-to-edge inside a fixed-width page so every column is
+   * guaranteed to be visible (used by preview/print/export). Never clips.
+   */
+  fitPage?: boolean;
 }
 
 export function ScheduleGrid({
@@ -111,6 +116,7 @@ export function ScheduleGrid({
   onEditActivity,
   onAddActivity,
   compact = false,
+  fitPage = false,
 }: ScheduleGridProps) {
   const days = useMemo(() => scheduleDaySpan(schedule), [schedule]);
   const settings = schedule.settings;
@@ -270,8 +276,10 @@ export function ScheduleGrid({
 
   const fontSizeCls =
     settings.fontSize === 'small' ? 'text-[11px]' : settings.fontSize === 'large' ? 'text-sm' : 'text-xs';
-  const densityPad =
+  const densityPadBase =
     settings.density === 'compact' ? 'p-1' : settings.density === 'spacious' ? 'p-2.5' : 'p-1.5';
+  // On a real page every column must stay readable, so cards use tighter padding.
+  const densityPad = fitPage && days.length > 2 ? 'p-1' : densityPadBase;
 
   return (
     <div
@@ -284,7 +292,7 @@ export function ScheduleGrid({
       <div
         ref={gridRef}
         className={`schedule-grid-body`}
-        style={{ display: 'grid', position: 'relative', zIndex: 0 }}
+        style={{ position: 'relative', zIndex: 0 }}
         onPointerMove={interactive ? handlePointerMove : undefined}
         onPointerUp={interactive ? handlePointerUp : undefined}
         onDoubleClick={interactive ? handleGridDoubleClick : undefined}
@@ -296,32 +304,44 @@ export function ScheduleGrid({
   );
 
   function renderGrid() {
-    const timeColW = compact ? 42 : 58;
-    const dayCol = monoDay
-      ? '1fr'
-      : days.length > 14
-        ? 'minmax(52px,1fr)'
-        : days.length > 7
-          ? 'minmax(88px,1fr)'
-          : 'minmax(120px,1fr)';
+    const timeColW = fitPage ? 58 : compact ? 42 : 58;
+    const timeFontCls = fitPage && !compact ? 'text-[10px]' : fontSizeCls;
+    const dayCol = fitPage
+      ? 'minmax(0,1fr)'
+      : monoDay
+        ? '1fr'
+        : days.length > 14
+          ? 'minmax(52px,1fr)'
+          : days.length > 7
+            ? 'minmax(88px,1fr)'
+            : 'minmax(120px,1fr)';
     const cols = `repeat(${days.length}, ${dayCol})`;
     const rows = `auto repeat(${slots.length}, ${slotHeight}px)`;
     const gridStyle: React.CSSProperties = {
+      // The template columns/rows below are inert unless this element is
+      // actually a grid container — without it every cell and every activity
+      // card became a full-width block that overlapped the time column.
+      display: 'grid',
       gridTemplateColumns: `${timeColW}px ${cols}`,
       gridTemplateRows: rows,
-      minWidth: days.length > 14 ? undefined : `${days.length * (days.length > 7 ? 100 : 140) + timeColW}px`,
+      width: '100%',
+      maxWidth: '100%',
+      // A page-sized sheet must never overflow: minWidth is what used to push
+      // the last day columns outside the exported page.
+      minWidth: fitPage || days.length > 14 ? undefined : `${days.length * (days.length > 7 ? 100 : 140) + timeColW}px`,
     };
+
+    const stickyCls = fitPage ? '' : 'sticky left-0';
 
     const headerCells: React.ReactNode[] = [
       <div
         key="corner"
-        className="sticky left-0 z-20 flex items-end justify-start pb-2 pr-2"
+        className={`${stickyCls} flex items-end justify-start pb-2 ${fitPage ? 'pr-1' : 'pr-2'}`}
         style={{ gridColumn: 1, gridRow: 1, background: sheetStyle.headerBg, color: sheetStyle.muted, borderBottom: `1px solid ${sheetStyle.borderColor}`, zIndex: 710 }}
       >
         <span className={`${fontSizeCls} font-medium`}>Time</span>
       </div>,
     ];
-
     days.forEach((day, di) => {
       const d = parseDateKey(day);
       const isToday =
@@ -329,18 +349,19 @@ export function ScheduleGrid({
       headerCells.push(
         <div
           key={day}
-          className="relative flex flex-col justify-center px-2 py-2 text-center"
+          className={`relative flex flex-col justify-center ${fitPage && days.length > 2 ? 'px-1 py-1.5' : 'px-2 py-2'} text-center`}
           style={{
             borderBottom: `1px solid ${sheetStyle.borderColor}`,
             borderLeft: di === 0 ? undefined : `1px solid ${sheetStyle.borderColor}`,
             background: isToday ? withAlpha(settings.primaryColor, 0.08) : sheetStyle.headerBg,
+            ...(fitPage ? { minWidth: 0, overflow: 'hidden' as const } : null),
           }}
         >
-          <span className={`${fontSizeCls} font-bold ${isToday ? 'text-[var(--accent)]' : ''}`} style={{ color: isToday ? settings.primaryColor : undefined }}>
+          <span className={`${fontSizeCls} font-bold leading-tight ${isToday ? 'text-[var(--accent)]' : ''}`} style={{ color: isToday ? settings.primaryColor : undefined }}>
             {weekdayShort(day)}
           </span>
           {!monoDay && (
-            <span className={`${fontSizeCls} opacity-70`} style={{ color: sheetStyle.muted }}>
+            <span className={`${fontSizeCls} leading-tight opacity-70`} style={{ color: sheetStyle.muted }}>
               {monthDay(day)}
             </span>
           )}
@@ -354,7 +375,7 @@ export function ScheduleGrid({
       body.push(
         <div
           key={`label-${slot}`}
-          className="sticky left-0 z-10 flex items-start justify-end pr-2 pt-0.5"
+          className={`${stickyCls} flex items-start justify-end ${fitPage ? 'pr-1' : 'pr-2'} pt-0.5`}
           style={{
             gridColumn: 1,
             gridRow: si + 2,
@@ -364,7 +385,7 @@ export function ScheduleGrid({
             zIndex: 700,
           }}
         >
-          <span className="whitespace-nowrap">{formatMinutes(slot, settings.use24Hour)}</span>
+          <span className={`${timeFontCls} whitespace-nowrap`}>{formatMinutes(slot, settings.use24Hour)}</span>
         </div>,
       );
       days.forEach((day, di) => {
@@ -379,6 +400,7 @@ export function ScheduleGrid({
               borderLeft: di === 0 ? undefined : `1px solid ${sheetStyle.borderColor}`,
               background: odd && useGridLines ? sheetStyle.stripeColor : 'transparent',
               position: 'relative',
+              ...(fitPage ? { minWidth: 0, overflow: 'hidden' } : null),
             }}
           >
             {si === 0 && (
@@ -709,13 +731,13 @@ function ActivityCard({
       </div>
 
       {interactive && (
-        <div className="absolute inset-y-0 right-0 hidden w-16 flex-col items-end justify-center gap-1 bg-gradient-to-l from-black/20 to-transparent py-1 pr-1 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none">
+        <div className="absolute inset-y-0 right-0 flex w-16 flex-col items-end justify-center gap-1 bg-gradient-to-l from-black/20 to-transparent py-1 pr-1 opacity-0 transition-opacity pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto">
           <button
             onClick={(e) => {
               e.stopPropagation();
               onEdit();
             }}
-            className="pointer-events-auto mt-6 rounded-md p-1 text-white hover:bg-white/20"
+            className="mt-6 rounded-md p-1 text-white hover:bg-white/20"
             aria-label="Edit activity"
           >
             <Pencil size={12} />
@@ -725,7 +747,7 @@ function ActivityCard({
               e.stopPropagation();
               onDuplicate();
             }}
-            className="pointer-events-auto rounded-md p-1 text-white hover:bg-white/20"
+            className="rounded-md p-1 text-white hover:bg-white/20"
             aria-label="Duplicate activity"
           >
             <Copy size={12} />
@@ -735,7 +757,7 @@ function ActivityCard({
               e.stopPropagation();
               onDelete();
             }}
-            className="pointer-events-auto rounded-md p-1 text-white hover:bg-red-400/80"
+            className="rounded-md p-1 text-white hover:bg-red-400/80"
             aria-label="Delete activity"
           >
             <Trash2 size={12} />

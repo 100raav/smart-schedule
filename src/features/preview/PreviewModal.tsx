@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   X,
@@ -22,6 +22,7 @@ import {
   exportPNG,
   exportJPG,
   buildExportName,
+  describeExport,
 } from '../../services/exportService';
 import { exportScheduleJson } from '../../services/jsonService';
 
@@ -38,15 +39,9 @@ const PAGE_RATIO: Record<PaperSize, number> = {
 };
 
 const QUALITY_LABEL: Record<ExportQuality, string> = {
-  standard: '1×',
-  high: '2×',
+  standard: '2×',
+  high: '3×',
   ultra: '4×',
-};
-
-const SCALE_PX: Record<ExportQuality, number> = {
-  standard: 2,
-  high: 3,
-  ultra: 4,
 };
 
 interface Props {
@@ -64,22 +59,55 @@ export function PreviewModal({ open, onClose, schedule, onEdit }: Props) {
   const [quality, setQuality] = useState<ExportQuality>('high');
   const [zoom, setZoom] = useState(1);
   const [busy, setBusy] = useState<string | null>(null);
+  const [sheetSize, setSheetSize] = useState({ w: 0, h: 0 });
 
   useEffect(() => {
     if (open) setZoom(1);
   }, [open]);
 
-  const pageWidthPx = orientation === 'landscape' ? PAGE_PX[paperSize] * 1.414 : PAGE_PX[paperSize];
-  const pageHeightPx = Math.round(pageWidthPx / PAGE_RATIO[paperSize]);
-  const outWidthPx = Math.round(pageWidthPx * SCALE_PX[quality]);
-  const outHeightPx = Math.round(pageHeightPx * SCALE_PX[quality]);
-  const fileName = buildExportName(schedule.name, 'pdf');
+  // True page box, then swap the long edge for landscape.
+  const portraitW = PAGE_PX[paperSize];
+  const portraitH = Math.round(portraitW * PAGE_RATIO[paperSize]);
+  const isLandscape = orientation === 'landscape';
+  const pageWidthPx = isLandscape ? portraitH : portraitW;
+  const pageHeightPx = isLandscape ? portraitW : portraitH;
+  // ~10 mm of print margin on every side, measured off the short edge so the
+  // physical margin stays identical in portrait and landscape.
+  const pagePad = Math.round(portraitW * 0.047);
+
+  const plan = describeExport(
+    sheetSize.w || pageWidthPx,
+    sheetSize.h || pageHeightPx,
+    { quality, paperSize, orientation },
+  );
+  const baseName = buildExportName(schedule.name, '').replace(/\.$/, '');
+  const fileName = `${baseName}.pdf · .png · .jpg`;
+
+  // Track the real sheet size so the readout matches the downloaded file.
+  useLayoutEffect(() => {
+    const el = sheetRef.current;
+    if (!el) return;
+    const measure = () =>
+      setSheetSize((prev) => {
+        const w = el.clientWidth;
+        const h = el.clientHeight;
+        return prev.w === w && prev.h === h ? prev : { w, h };
+      });
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [open, pageWidthPx, pageHeightPx, schedule]);
 
   const runExport = async (format: 'pdf' | 'png' | 'jpg' | 'json') => {
     const node = sheetRef.current;
     if (!node) return;
     setBusy(format);
+    // Export at 1:1 — never let the on-screen zoom affect the rendered output.
+    const prevZoom = zoom;
+    setZoom(1);
     try {
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
       const name = buildExportName(schedule.name, format);
       if (format === 'pdf') {
         await exportPDF(node, { quality, paperSize, orientation }, name);
@@ -98,12 +126,13 @@ export function PreviewModal({ open, onClose, schedule, onEdit }: Props) {
       toast('error', 'Export failed', (e as Error).message || 'Something went wrong.');
     } finally {
       setBusy(null);
+      if (prevZoom !== 1) setZoom(prevZoom);
     }
   };
 
   return (
     <motion.div
-      className={`fixed inset-0 z-[90] flex flex-col bg-ink-950/40 backdrop-blur-sm ${open ? '' : 'pointer-events-none'}`}
+      className={`fixed inset-0 z-[90] flex flex-col bg-ink-950/55 ${open ? '' : 'pointer-events-none'}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: open ? 1 : 0 }}
       style={{ display: open ? 'flex' : 'none' }}
@@ -198,42 +227,52 @@ export function PreviewModal({ open, onClose, schedule, onEdit }: Props) {
           backgroundSize: '22px 22px',
         }}
       >
-        <div className="mx-auto" style={{ width: pageWidthPx * zoom }}>
-          <div
-            style={{
-              transform: `scale(${zoom})`,
-              transformOrigin: 'top left',
-              width: pageWidthPx,
-            }}
-          >
+        {open && (
+          <div className="mx-auto" style={{ width: pageWidthPx * zoom, height: (sheetSize.h || pageHeightPx) * zoom }}>
             <div
-              ref={sheetRef}
-              className="print-sheet mx-auto overflow-hidden rounded-lg bg-white shadow-lift ring-1 ring-ink-900/10"
-              style={{ width: pageWidthPx }}
+              style={{
+                transform: `scale(${zoom})`,
+                transformOrigin: 'top left',
+                width: pageWidthPx,
+              }}
             >
-              <ScheduleGrid schedule={schedule} />
+              <div
+                ref={sheetRef}
+                className="print-sheet mx-auto overflow-hidden bg-white shadow-lift ring-1 ring-ink-900/10"
+                style={{
+                  width: pageWidthPx,
+                  minHeight: pageHeightPx,
+                  padding: pagePad,
+                  boxSizing: 'border-box',
+                  printColorAdjust: 'exact',
+                  WebkitPrintColorAdjust: 'exact',
+                }}
+              >
+                <ScheduleGrid schedule={schedule} fitPage />
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div className="no-print mx-auto mt-5 flex max-w-2xl flex-col items-center gap-3">
           <div className="flex flex-wrap items-center justify-center gap-2 text-[11px]">
             <span className="chip border-ink-200 bg-white text-ink-600 dark:border-white/15 dark:bg-white/10 dark:text-ink-300">
-              {paperSize.toUpperCase()} · {orientation}
+              {paperSize.toUpperCase()} · {orientation} · {plan.paperWidthMm} × {plan.paperHeightMm} mm
             </span>
             <span className="chip border-ink-200 bg-white text-ink-600 dark:border-white/15 dark:bg-white/10 dark:text-ink-300">
-              {Math.round(pageWidthPx)} × {pageHeightPx} px
+              {plan.pages} {plan.pages === 1 ? 'page' : 'pages'}
             </span>
             <span className="chip border-ink-200 bg-white text-ink-600 dark:border-white/15 dark:bg-white/10 dark:text-ink-300">
-              Export {SCALE_PX[quality]}× → {outWidthPx} × {outHeightPx} px
+              {QUALITY_LABEL[quality]} · {plan.imageWidth} × {plan.imageHeight} px
             </span>
             <span className="chip border-ink-200 bg-white text-ink-600 dark:border-white/15 dark:bg-white/10 dark:text-ink-300">
-              {schedule.activities.length} activities
+              {schedule.activities.length} activities · {sheetSize.w || pageWidthPx} ×{' '}
+              {sheetSize.h || pageHeightPx} px
             </span>
           </div>
           <p className="text-center text-xs text-ink-500 dark:text-ink-400">
-            The exported file matches this preview exactly — same layout, colors and
-            typography.
+            Crisp print-resolution text at {QUALITY_LABEL[quality]} · PNG and PDF stay lossless ·
+            the PDF paginates automatically and every column always fits the page width.
           </p>
         </div>
 
